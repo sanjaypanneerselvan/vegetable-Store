@@ -774,7 +774,7 @@ function renderTracking() {
     const partnerInfo = order.deliveryPartner ? `
       <div style="margin-top:20px;padding-top:16px;border-top:1px dashed var(--gray-200)">
         <div style="font-size:.82rem;font-weight:700;color:var(--gray-600);margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">Delivery Partner Details</div>
-        <div style="display:flex;align-items:center;gap:12px;background:var(--gray-50);padding:12px;border-radius:var(--radius);border:1px solid var(--gray-100)">
+        <div style="display:flex;align-items:center;gap:12px;background:var(--gray-50);padding:12px;border-radius:var(--radius);border:1px solid var(--gray-100);margin-bottom:12px">
           <div style="width:40px;height:40px;border-radius:50%;background:var(--green-100);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0">🛵</div>
           <div style="flex:1">
             <div style="font-size:.9rem;font-weight:700">${order.deliveryPartner.name}</div>
@@ -783,6 +783,16 @@ function renderTracking() {
           <div style="text-align:right">
             <div style="font-size:.8rem;font-weight:600;color:var(--gray-700)">${order.deliveryPartner.vehicleNo}</div>
             <div style="font-size:.7rem;color:var(--gray-500)">${order.deliveryPartner.vehicleType}</div>
+          </div>
+        </div>
+        <div style="font-size:.82rem;font-weight:700;color:var(--gray-600);margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">Live Tracking</div>
+        <div style="border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--gray-200);height:200px;background:var(--gray-100);position:relative">
+          <iframe width="100%" height="100%" frameborder="0" style="border:0;filter:contrast(1.2) sepia(0.2) hue-rotate(80deg) blur(0.5px)" 
+            src="https://maps.google.com/maps?q=Koyambedu%20Market%20Chennai&t=&z=13&ie=UTF8&iwloc=&output=embed" allowfullscreen>
+          </iframe>
+          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:2rem;text-shadow:0 2px 5px rgba(0,0,0,0.3);animation:bounce 2s infinite">🚚</div>
+          <div style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:var(--white);padding:4px 12px;border-radius:20px;font-size:.75rem;font-weight:600;box-shadow:var(--shadow-md);display:flex;align-items:center;gap:6px">
+            <span style="width:8px;height:8px;background:var(--green-500);border-radius:50%;display:inline-block;animation:pulse 2s infinite"></span> Live Location
           </div>
         </div>
       </div>` : '';
