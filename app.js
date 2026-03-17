@@ -153,7 +153,8 @@ function renderAppShell(content) {
         ${content}
       </div>
     </div>
-  </div>`;
+  </div>
+  <div id="invoice-modal-container"></div>`;
 }
 
 function bindAppShell() {}
@@ -371,7 +372,10 @@ function renderDashboard() {
           <td>${o.items.length} items</td>
           <td><strong>${formatCurrency(o.total)}</strong></td>
           <td><span class="order-status-badge badge-${o.status}">${o.status.replace(/_/g,' ')}</span></td>
-          <td><button class="btn btn-outline btn-sm" onclick="navigate('tracking')">Track</button></td>
+          <td>
+            <button class="btn btn-outline btn-sm" onclick="navigate('tracking')">Track</button>
+            <button class="btn btn-ghost btn-sm" style="margin-left:4px;padding:7px 10px" onclick="openInvoice('${o.id}')" title="View Invoice">👁️</button>
+          </td>
         </tr>`).join('')}
       </tbody>
     </table>
@@ -741,7 +745,10 @@ function renderOrders() {
           <td>${o.items.length} items</td>
           <td><strong>${formatCurrency(o.total)}</strong></td>
           <td><span class="order-status-badge badge-${o.status}">${o.status.replace(/_/g,' ')}</span></td>
-          <td><button class="btn btn-outline btn-sm" onclick="navigate('tracking')">Track</button></td>
+          <td>
+            <button class="btn btn-outline btn-sm" onclick="navigate('tracking')">Track</button>
+            <button class="btn btn-ghost btn-sm" style="margin-left:4px;padding:7px 10px" onclick="openInvoice('${o.id}')" title="View Invoice">👁️</button>
+          </td>
         </tr>`).join('')}
       </tbody>
     </table>
@@ -936,6 +943,78 @@ function addProduct() {
 }
 
 function closeModal(id) { $(id).classList.remove('open'); }
+
+/* ── Invoice ── */
+function openInvoice(orderId) {
+  const order = State.orders.find(o => o.id === orderId);
+  if (!order) return;
+
+  const subtotal = order.items.reduce((a, b) => a + (b.price * b.qty), 0);
+  const delivery = 50;
+  const gst = Math.round(subtotal * 0.05);
+
+  const html = `
+  <div class="modal-overlay open" id="invoice-${orderId}">
+    <div class="modal" style="max-width:540px">
+      <div class="modal-header" style="border-bottom:1px solid var(--gray-200);padding-bottom:16px;margin-bottom:16px">
+        <div>
+          <div class="modal-title" style="font-size:1.4rem">Invoice</div>
+          <div style="font-size:.8rem;color:var(--gray-500)">Order #${order.id} &nbsp;|&nbsp; ${order.date}</div>
+        </div>
+        <div class="modal-close" onclick="closeModal('invoice-${orderId}')">✕</div>
+      </div>
+      <div style="margin-bottom:20px;font-size:.85rem;color:var(--gray-600);display:flex;justify-content:space-between">
+        <div>
+          <strong>Billed To:</strong><br>
+          ${State.currentUser.shopName}<br>
+          ${State.currentUser.name}<br>
+          ${State.currentUser.phone}
+        </div>
+        <div style="text-align:right">
+          <strong>From:</strong><br>
+          VegMarket B2B Platform<br>
+          Chennai Wholesale Hub
+        </div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:.85rem">
+        <thead>
+          <tr style="border-bottom:2px solid var(--gray-200);text-align:left">
+            <th style="padding:8px 0">Item</th>
+            <th style="padding:8px 0;text-align:right">Qty</th>
+            <th style="padding:8px 0;text-align:right">Price</th>
+            <th style="padding:8px 0;text-align:right">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${order.items.map(item => `
+            <tr style="border-bottom:1px solid var(--gray-100)">
+              <td style="padding:10px 0">
+                <strong>${item.name}</strong><br>
+                <span style="font-size:.75rem;color:var(--gray-500)">Vendor: ${item.shopId}</span>
+              </td>
+              <td style="padding:10px 0;text-align:right">${item.qty} kg</td>
+              <td style="padding:10px 0;text-align:right">₹${item.price}</td>
+              <td style="padding:10px 0;text-align:right;font-weight:600">₹${item.price * item.qty}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      <div style="display:flex;justify-content:flex-end">
+        <div style="width:240px;font-size:.85rem">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Subtotal:</span> <span>₹${subtotal}</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Delivery:</span> <span>₹${delivery}</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;padding-bottom:10px;border-bottom:1px solid var(--gray-200)"><span>GST (5%):</span> <span>₹${gst}</span></div>
+          <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:1.1rem;font-weight:800;color:var(--green-700)"><span>Total:</span> <span>₹${order.total}</span></div>
+        </div>
+      </div>
+      <div style="margin-top:24px;display:flex;gap:12px;justify-content:flex-end;border-top:1px solid var(--gray-200);padding-top:20px">
+        <button class="btn btn-outline" onclick="window.print()">🖨️ Print Invoice</button>
+        <button class="btn btn-primary" onclick="closeModal('invoice-${orderId}')">Close</button>
+      </div>
+    </div>
+  </div>`;
+  $('invoice-modal-container').innerHTML = html;
+}
 
 /* ── Init ── */
 document.addEventListener('DOMContentLoaded', () => {
