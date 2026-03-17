@@ -711,7 +711,13 @@ function placeOrder(total) {
       { status: 'Packed', time: '', done: false },
       { status: 'Out for Delivery', time: '', done: false },
       { status: 'Delivered', time: '', done: false },
-    ]
+    ],
+    deliveryPartner: {
+      name: ['Ramesh K', 'Suresh M', 'Karthik P', 'Mani V'][Math.floor(Math.random() * 4)],
+      phone: '+91 9' + Math.floor(100000000 + Math.random() * 900000000),
+      vehicleType: ['Tata Ace (Mini Truck)', 'Mahindra Bolero Pickup', 'Ashok Leyland Dost'][Math.floor(Math.random() * 3)],
+      vehicleNo: 'TN ' + (Math.floor(Math.random() * 80) + 10) + ' ' + String.fromCharCode(65 + Math.floor(Math.random() * 26)) + String.fromCharCode(65 + Math.floor(Math.random() * 26)) + ' ' + (Math.floor(Math.random() * 8999) + 1000)
+    }
   };
   State.orders.unshift(newOrder);
   State.cart = [];
@@ -760,6 +766,22 @@ function renderTracking() {
       </div>`;
     }).join('');
 
+    const partnerInfo = order.deliveryPartner ? `
+      <div style="margin-top:20px;padding-top:16px;border-top:1px dashed var(--gray-200)">
+        <div style="font-size:.82rem;font-weight:700;color:var(--gray-600);margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">Delivery Partner Details</div>
+        <div style="display:flex;align-items:center;gap:12px;background:var(--gray-50);padding:12px;border-radius:var(--radius);border:1px solid var(--gray-100)">
+          <div style="width:40px;height:40px;border-radius:50%;background:var(--green-100);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0">🛵</div>
+          <div style="flex:1">
+            <div style="font-size:.9rem;font-weight:700">${order.deliveryPartner.name}</div>
+            <div style="font-size:.78rem;color:var(--gray-500)">📞 ${order.deliveryPartner.phone}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:.8rem;font-weight:600;color:var(--gray-700)">${order.deliveryPartner.vehicleNo}</div>
+            <div style="font-size:.7rem;color:var(--gray-500)">${order.deliveryPartner.vehicleType}</div>
+          </div>
+        </div>
+      </div>` : '';
+
     return `<div class="order-card">
       <div class="order-card-head">
         <div>
@@ -772,6 +794,7 @@ function renderTracking() {
         <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
         <div style="font-size:.75rem;color:var(--gray-500);text-align:right;margin-top:4px;margin-bottom:16px">${pct}% complete</div>
         <div class="timeline">${timelineHtml}</div>
+        ${partnerInfo}
       </div>
     </div>`;
   }).join('');
