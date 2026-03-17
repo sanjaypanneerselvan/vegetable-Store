@@ -475,22 +475,35 @@ function renderShops() {
 
 /* ── Products ── */
 function renderProducts() {
-  const shop = AppData.shops.find(s => s.id === State.currentShop) || AppData.shops[0];
-  const market = AppData.markets.find(m => m.id === (shop ? shop.marketId : 'm1'));
-  let vegs = AppData.vegetables.filter(v => v.shopId === shop.id);
-
+  const isGlobalSearch = State.currentShop === 'global_search';
   const q = State.searchQuery.toLowerCase();
+  
+  let vegs = [];
+  let shop = null;
+  let market = null;
+
+  if (isGlobalSearch) {
+    vegs = [...AppData.vegetables];
+  } else {
+    shop = AppData.shops.find(s => s.id === State.currentShop) || AppData.shops[0];
+    market = AppData.markets.find(m => m.id === (shop ? shop.marketId : 'm1'));
+    vegs = AppData.vegetables.filter(v => v.shopId === shop.id);
+  }
+
   if (q) vegs = vegs.filter(v => v.name.toLowerCase().includes(q) || v.category.toLowerCase().includes(q));
   if (State.filterCategory !== 'All') vegs = vegs.filter(v => v.category === State.filterCategory);
 
-  const cats = ['All', ...new Set(AppData.vegetables.filter(v => v.shopId === shop.id).map(v => v.category))];
+  const cats = ['All', ...new Set((isGlobalSearch && !q ? [] : vegs).map(v => v.category))];
 
   return `
   <div class="breadcrumb">
     <a onclick="navigate('markets')">Markets</a>
+    ${isGlobalSearch ? `<span>›</span> Global Search: "${State.searchQuery}"` : `
     <span>›</span><a onclick="navigate('shops',{market:'${shop.marketId}'})">${market ? market.name : ''}</a>
     <span>›</span> ${shop.name}
+    `}
   </div>
+  ${!isGlobalSearch ? `
   <div style="background:var(--white);border-radius:var(--radius-lg);padding:16px 20px;border:1px solid var(--gray-100);margin-bottom:20px;display:flex;align-items:center;gap:14px">
     <img src="${shop.image}" style="width:52px;height:52px;border-radius:10px;object-fit:cover">
     <div style="flex:1">
@@ -498,7 +511,15 @@ function renderProducts() {
       <div style="font-size:.8rem;color:var(--gray-500)">🌿 ${shop.speciality} &nbsp;|&nbsp; ${stars(shop.rating)} (${shop.reviews} reviews)</div>
     </div>
     <button class="btn btn-ghost btn-sm" onclick="navigate('cart')">🛒 Cart (${State.cart.reduce((a,b)=>a+b.qty,0)})</button>
+  </div>` : `
+  <div style="background:var(--white);border-radius:var(--radius-lg);padding:16px 20px;border:1px solid var(--green-200);background:var(--green-50);margin-bottom:20px;display:flex;align-items:center;justify-content:space-between">
+    <div>
+      <div style="font-size:1rem;font-weight:700;color:var(--green-800)">🔍 Search Results across All Markets</div>
+      <div style="font-size:.8rem;color:var(--green-700)">Found ${vegs.length} products for "${State.searchQuery}"</div>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="navigate('cart')">🛒 Cart (${State.cart.reduce((a,b)=>a+b.qty,0)})</button>
   </div>
+  `}
   <div class="filter-bar" id="cat-filter">
     ${cats.map(c => `<div class="chip ${State.filterCategory===c?'active':''}" onclick="setCategory('${c}')">${c}</div>`).join('')}
   </div>
@@ -506,21 +527,22 @@ function renderProducts() {
   `<div class="products-grid">
     ${vegs.map(v => {
       const inCart = State.cart.find(c => c.vegId === v.id);
+      const vShop = AppData.shops.find(s => s.id === v.shopId);
       return `<div class="product-card" id="pc-${v.id}">
         ${v.todayDeal ? '<div class="today-badge">Today\'s Deal</div>' : ''}
         <img class="product-card-img" src="${v.image}" alt="${v.name}" loading="lazy">
         <div class="product-card-body">
           <div class="product-name">${v.name}</div>
-          <div class="product-cat">${v.category}</div>
+          <div class="product-cat">${v.category}${isGlobalSearch && vShop ? ` · <span style="color:var(--green-600)">${vShop.name}</span>` : ''}</div>
           <div class="product-price">₹${v.pricePerKg}<span> / ${v.unit}</span></div>
           <div class="qty-selector">
-            <div class="qty-btn" onclick="changeQty('${v.id}',${v.pricePerKg},'${shop.name}','${v.image}','${v.name}','${shop.id}',-1)">−</div>
+            <div class="qty-btn" onclick="changeQty('${v.id}',${v.pricePerKg},'${vShop ? vShop.name : ''}','${v.image}','${v.name}','${v.shopId}',-1)">−</div>
             <div class="qty-value" id="qty-${v.id}">${inCart ? inCart.qty : 0}</div>
-            <div class="qty-btn" onclick="changeQty('${v.id}',${v.pricePerKg},'${shop.name}','${v.image}','${v.name}','${shop.id}',1)">+</div>
+            <div class="qty-btn" onclick="changeQty('${v.id}',${v.pricePerKg},'${vShop ? vShop.name : ''}','${v.image}','${v.name}','${v.shopId}',1)">+</div>
             <span style="font-size:.72rem;color:var(--gray-400)">kg</span>
           </div>
           <button class="btn ${inCart ? 'btn-outline' : 'btn-primary'} btn-full btn-sm" id="add-btn-${v.id}"
-            onclick="addToCart('${v.id}',${v.pricePerKg},'${shop.name}','${v.image}','${v.name}','${shop.id}')">
+            onclick="addToCart('${v.id}',${v.pricePerKg},'${vShop ? vShop.name : ''}','${v.image}','${v.name}','${v.shopId}')">
             ${inCart ? '✓ In Cart' : '+ Add to Cart'}
           </button>
         </div>
@@ -536,9 +558,13 @@ function setCategory(cat) {
 
 function handleSearch(val) {
   State.searchQuery = val;
-  if (State.currentPage === 'products') {
-    const shopId = State.currentShop;
-    navigate('products', { shop: shopId });
+  if (val.length > 0) {
+    navigate('products', { shop: 'global_search' });
+  } else if (State.currentPage === 'products' && State.currentShop === 'global_search') {
+    // If search is cleared, go back to markets
+    navigate('markets');
+  } else if (State.currentPage === 'products') {
+    navigate('products', { shop: State.currentShop });
   }
 }
 
