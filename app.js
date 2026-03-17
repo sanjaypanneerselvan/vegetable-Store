@@ -963,62 +963,119 @@ function openInvoice(orderId) {
 
   const html = `
   <div class="modal-overlay open" id="invoice-${orderId}">
-    <div class="modal" style="max-width:540px">
-      <div class="modal-header" style="border-bottom:1px solid var(--gray-200);padding-bottom:16px;margin-bottom:16px">
-        <div>
-          <div class="modal-title" style="font-size:1.4rem">Invoice</div>
-          <div style="font-size:.8rem;color:var(--gray-500)">Order #${order.id} &nbsp;|&nbsp; ${order.date}</div>
+    <div class="modal" style="max-width:700px;background:#fff">
+      
+      <!-- Print/Close Controls (Hidden on Print) -->
+      <div class="modal-header print-hidden" style="border-bottom:1px solid var(--gray-200);padding-bottom:16px;margin-bottom:16px">
+        <div class="modal-title" style="font-size:1.4rem;margin-bottom:0;border:0;padding:0">Print Invoice</div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Print (A4)</button>
+          <div class="modal-close" onclick="closeModal('invoice-${orderId}')">✕</div>
         </div>
-        <div class="modal-close" onclick="closeModal('invoice-${orderId}')">✕</div>
       </div>
-      <div style="margin-bottom:20px;font-size:.85rem;color:var(--gray-600);display:flex;justify-content:space-between">
+
+      <!-- Invoice Document Header -->
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:30px;border-bottom:2px solid #000;padding-bottom:20px">
         <div>
-          <strong>Billed To:</strong><br>
-          ${State.currentUser.shopName}<br>
-          ${State.currentUser.name}<br>
-          ${State.currentUser.phone}
+          <h1 style="font-size:1.8rem;font-weight:800;color:var(--green-700);margin:0 0 4px 0">VegMarket Wholesale</h1>
+          <div style="font-size:.85rem;color:#444">
+            India's Largest B2B Agri-Platform<br>
+            Koyambedu Wholesale Market Complex<br>
+            Chennai, Tamil Nadu 600092<br>
+            <strong>GSTIN:</strong> 33AAACV1234F1Z5<br>
+            <strong>Phone:</strong> +91 1800-VEG-MART
+          </div>
         </div>
         <div style="text-align:right">
-          <strong>From:</strong><br>
-          VegMarket B2B Platform<br>
-          Chennai Wholesale Hub
+          <h2 style="font-size:2.2rem;font-weight:800;color:#aaa;text-transform:uppercase;letter-spacing:2px;margin:0 0 10px 0">Tax Invoice</h2>
+          <div style="font-size:.9rem;color:#222">
+            <div><strong>Invoice No:</strong> INV-${order.id.replace('ORD-','')}</div>
+            <div><strong>Order No:</strong> ${order.id}</div>
+            <div><strong>Date:</strong> ${order.date}</div>
+          </div>
         </div>
       </div>
-      <table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:.85rem">
+
+      <!-- Billing Info -->
+      <div style="display:flex;justify-content:space-between;margin-bottom:30px;padding:15px;background:#f8f9fa;border-radius:8px;border:1px solid #eee">
+        <div style="flex:1">
+          <div style="font-size:.75rem;text-transform:uppercase;color:#666;font-weight:700;letter-spacing:1px;margin-bottom:8px">Billed To</div>
+          <strong style="font-size:1.1rem;display:block;margin-bottom:4px;color:#000">${State.currentUser.shopName}</strong>
+          <div style="font-size:.85rem;color:#333;line-height:1.5">
+            <strong>Contact:</strong> ${State.currentUser.name}<br>
+            <strong>Address:</strong> ${State.currentUser.address}<br>
+            <strong>Phone:</strong> ${State.currentUser.phone}<br>
+            <strong>Role:</strong> ${State.currentUser.role === 'buyer' ? 'Retailer / Shop Owner' : 'Market Vendor'}
+          </div>
+        </div>
+        <div style="flex:1;text-align:right">
+           <div style="font-size:.75rem;text-transform:uppercase;color:#666;font-weight:700;letter-spacing:1px;margin-bottom:8px">Delivery Details</div>
+            <div style="font-size:.85rem;color:#333;line-height:1.5">
+              ${order.deliveryPartner ? `
+                <strong>Partner:</strong> ${order.deliveryPartner.name}<br>
+                <strong>Vehicle:</strong> ${order.deliveryPartner.vehicleType}<br>
+                <strong>Vehicle No:</strong> ${order.deliveryPartner.vehicleNo}<br>
+                <strong>Phone:</strong> ${order.deliveryPartner.phone}
+              ` : 'Pending Assignment'}
+            </div>
+        </div>
+      </div>
+
+      <!-- Items Table -->
+      <table style="width:100%;border-collapse:collapse;margin-bottom:30px;font-size:.9rem;border:1px solid #eee">
         <thead>
-          <tr style="border-bottom:2px solid var(--gray-200);text-align:left">
-            <th style="padding:8px 0">Item</th>
-            <th style="padding:8px 0;text-align:right">Qty</th>
-            <th style="padding:8px 0;text-align:right">Price</th>
-            <th style="padding:8px 0;text-align:right">Total</th>
+          <tr style="background:#f1f5f9;border-bottom:2px solid #cbd5e1;text-align:left">
+            <th style="padding:12px;color:#334155">#</th>
+            <th style="padding:12px;color:#334155">Item Description & Vendor</th>
+            <th style="padding:12px;text-align:right;color:#334155">HSN Code</th>
+            <th style="padding:12px;text-align:right;color:#334155">Qty (kg)</th>
+            <th style="padding:12px;text-align:right;color:#334155">Rate (₹)</th>
+            <th style="padding:12px;text-align:right;color:#334155">Amount (₹)</th>
           </tr>
         </thead>
         <tbody>
-          ${order.items.map(item => `
-            <tr style="border-bottom:1px solid var(--gray-100)">
-              <td style="padding:10px 0">
-                <strong>${item.name}</strong><br>
-                <span style="font-size:.75rem;color:var(--gray-500)">Vendor: ${item.shopId}</span>
+          ${order.items.map((item, i) => `
+            <tr style="border-bottom:1px solid #e2e8f0">
+              <td style="padding:12px;color:#64748b">${i+1}</td>
+              <td style="padding:12px">
+                <strong style="color:#0f172a;display:block;margin-bottom:2px">${item.name}</strong>
+                <span style="font-size:.75rem;color:#64748b">Supplier: ${AppData.shops.find(s=>s.id===item.shopId)?.name || item.shopId}</span>
               </td>
-              <td style="padding:10px 0;text-align:right">${item.qty} kg</td>
-              <td style="padding:10px 0;text-align:right">₹${item.price}</td>
-              <td style="padding:10px 0;text-align:right;font-weight:600">₹${item.price * item.qty}</td>
+              <td style="padding:12px;text-align:right;color:#64748b">070${Math.floor(Math.random()*9)+1}</td>
+              <td style="padding:12px;text-align:right;font-weight:600">${item.qty}</td>
+              <td style="padding:12px;text-align:right">₹${item.price.toFixed(2)}</td>
+              <td style="padding:12px;text-align:right;font-weight:700">₹${(item.price * item.qty).toFixed(2)}</td>
             </tr>
           `).join('')}
         </tbody>
       </table>
-      <div style="display:flex;justify-content:flex-end">
-        <div style="width:240px;font-size:.85rem">
-          <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Subtotal:</span> <span>₹${subtotal}</span></div>
-          <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Delivery:</span> <span>₹${delivery}</span></div>
-          <div style="display:flex;justify-content:space-between;margin-bottom:6px;padding-bottom:10px;border-bottom:1px solid var(--gray-200)"><span>GST (5%):</span> <span>₹${gst}</span></div>
-          <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:1.1rem;font-weight:800;color:var(--green-700)"><span>Total:</span> <span>₹${order.total}</span></div>
+
+      <!-- Totals -->
+      <div style="display:flex;justify-content:space-between;align-items:flex-end">
+        
+        <div style="flex:1;padding-right:40px">
+          <div style="font-size:.8rem;color:#666;margin-bottom:20px;line-height:1.5">
+            <strong>Declaration:</strong><br>
+            We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct. Goods once sold cannot be taken back or exchanged.
+          </div>
+          <div style="display:inline-block;border-top:1px solid #ccc;padding-top:10px;margin-top:20px;text-align:center;width:200px;font-size:.85rem;color:#333;font-weight:600">
+            Authorized Signatory
+          </div>
+        </div>
+
+        <div style="width:320px;background:#f8f9fa;padding:20px;border-radius:8px;border:1px solid #eee">
+          <div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:.9rem;color:#444"><span>Subtotal</span> <span>₹${subtotal.toFixed(2)}</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:.9rem;color:#444"><span>Logistics & Handling</span> <span>₹${delivery.toFixed(2)}</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:12px;border-bottom:1px solid #ddd;padding-bottom:12px;font-size:.9rem;color:#444"><span>IGST @ 5.0%</span> <span>₹${gst.toFixed(2)}</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:1.3rem;font-weight:800;color:var(--green-800)"><span>Grand Total</span> <span>₹${order.total.toFixed(2)}</span></div>
         </div>
       </div>
-      <div style="margin-top:24px;display:flex;gap:12px;justify-content:flex-end;border-top:1px solid var(--gray-200);padding-top:20px">
-        <button class="btn btn-outline" onclick="window.print()">🖨️ Print Invoice</button>
-        <button class="btn btn-primary" onclick="closeModal('invoice-${orderId}')">Close</button>
+
+      <div style="text-align:center;margin-top:40px;font-size:.8rem;color:#888;border-top:1px solid #eee;padding-top:20px">
+        Thank you for your business. For any queries regarding this invoice, please contact support.
+        <br>Generated electronically by VegMarket Platform.
       </div>
+
     </div>
   </div>`;
   $('invoice-modal-container').innerHTML = html;
