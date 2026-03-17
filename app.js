@@ -372,9 +372,8 @@ function renderDashboard() {
           <td>${o.items.length} items</td>
           <td><strong>${formatCurrency(o.total)}</strong></td>
           <td><span class="order-status-badge badge-${o.status}">${o.status.replace(/_/g,' ')}</span></td>
-          <td>
             <button class="btn btn-outline btn-sm" onclick="navigate('tracking')">Track</button>
-            <button class="btn btn-ghost btn-sm" style="margin-left:4px;padding:7px 10px" onclick="openInvoice('${o.id}')" title="View Invoice">👁️</button>
+            <button class="btn btn-ghost btn-sm" style="margin-left:4px" onclick="openInvoice('${o.id}')" title="View Invoice">Invoice</button>
           </td>
         </tr>`).join('')}
       </tbody>
@@ -565,7 +564,6 @@ function handleSearch(val) {
   if (val.length > 0) {
     navigate('products', { shop: 'global_search' });
   } else if (State.currentPage === 'products' && State.currentShop === 'global_search') {
-    // If search is cleared, go back to markets
     navigate('markets');
   } else if (State.currentPage === 'products') {
     navigate('products', { shop: State.currentShop });
@@ -747,7 +745,7 @@ function renderOrders() {
           <td><span class="order-status-badge badge-${o.status}">${o.status.replace(/_/g,' ')}</span></td>
           <td>
             <button class="btn btn-outline btn-sm" onclick="navigate('tracking')">Track</button>
-            <button class="btn btn-ghost btn-sm" style="margin-left:4px;padding:7px 10px" onclick="openInvoice('${o.id}')" title="View Invoice">👁️</button>
+            <button class="btn btn-ghost btn-sm" style="margin-left:4px" onclick="openInvoice('${o.id}')" title="View Invoice">Invoice</button>
           </td>
         </tr>`).join('')}
       </tbody>
