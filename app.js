@@ -221,12 +221,12 @@ function renderLoginForm() {
     <div class="form-title">Welcome back!</div>
     <div class="form-sub">Login to your B2B account</div>
     <div class="form-group"><label class="form-label">Email</label>
-      <input class="form-input" id="login-email" type="email" placeholder="you@store.com" value="rajesh@store.com"></div>
+      <input class="form-input" id="login-email" type="email" placeholder="you@store.com" value="swetha@store.com"></div>
     <div class="form-group"><label class="form-label">Password</label>
       <input class="form-input" id="login-pwd" type="password" placeholder="••••••••" value="buyer123"></div>
     <button class="btn btn-primary btn-full" style="margin-top:8px" onclick="doLogin()">Login →</button>
     <p style="text-align:center;margin-top:14px;font-size:.8rem;color:var(--gray-500)">
-      Demo: buyer → rajesh@store.com / buyer123 &nbsp;|&nbsp; seller → murugan@market.com / seller123
+      Demo: buyer → swetha@store.com / buyer123 &nbsp;|&nbsp; seller → murugan@market.com / seller123
     </p>`;
 }
 

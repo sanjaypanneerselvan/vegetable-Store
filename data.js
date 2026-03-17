@@ -6,7 +6,7 @@ const AppData = {
 
   // --- Users (demo accounts) ---
   users: [
-    { id: 'u1', role: 'buyer', name: 'Rajesh Kumar', shopName: 'Kumar General Store', email: 'rajesh@store.com', phone: '9876543210', address: '12 Gandhi Nagar, Chennai', password: 'buyer123' },
+    { id: 'u1', role: 'buyer', name: 'Swetha', shopName: 'Swetha General Store', email: 'swetha@store.com', phone: '9876543210', address: '12 Gandhi Nagar, Chennai', password: 'buyer123' },
     { id: 'u2', role: 'seller', name: 'Murugan Selvan', shopName: 'Murugan Vegetables', email: 'murugan@market.com', phone: '9876501234', address: 'Stall 5, Anna Market, Chennai', password: 'seller123' },
     { id: 'u3', role: 'buyer', name: 'Priya Sharma', shopName: 'Priya Kirana Shop', email: 'priya@kirana.com', phone: '9123456789', address: '45 Nehru Street, Chennai', password: 'buyer123' },
   ],
