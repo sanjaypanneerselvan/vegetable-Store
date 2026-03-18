@@ -186,6 +186,7 @@ function updateCartBadge() {
 
 /* ── Auth Page ── */
 function renderAuth() {
+  setTimeout(bindAuth, 100); // Bind after render
   return `
   <div class="auth-layout">
     <div class="auth-brand">
@@ -223,6 +224,7 @@ function switchAuthTab(tab) {
   $('tab-login').className = 'auth-tab' + (tab === 'login' ? ' active' : '');
   $('tab-register').className = 'auth-tab' + (tab === 'register' ? ' active' : '');
   $('auth-form-body').innerHTML = tab === 'login' ? renderLoginForm() : renderRegisterForm();
+  bindAuth();
 }
 
 function switchRole(role) {
@@ -262,7 +264,20 @@ function renderRegisterForm() {
     <button class="btn btn-primary btn-full" style="margin-top:8px" onclick="doRegister()">Create Account →</button>`;
 }
 
-function bindAuth() {}
+function bindAuth() {
+  const loginForm = $('auth-form-body');
+  if (!loginForm) return;
+  
+  const inputs = loginForm.querySelectorAll('input');
+  inputs.forEach(input => {
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        if (authTab === 'login') doLogin();
+        else doRegister();
+      }
+    });
+  });
+}
 
 function doLogin() {
   const email = $('login-email').value.trim();
@@ -271,6 +286,7 @@ function doLogin() {
   if (!user) { toast('Invalid credentials. Use the demo accounts shown below.', 'error'); return; }
   if (authRole !== user.role) { toast(`This account is a ${user.role}. Please select the correct role.`, 'error'); return; }
   State.currentUser = user;
+  localStorage.setItem('vegmarket_user', JSON.stringify(user));
   toast(`Welcome back, ${user.name}! 👋`);
   navigate(user.role === 'seller' ? 'admin' : 'dashboard');
 }
@@ -286,12 +302,14 @@ function doRegister() {
   const newUser = { id: 'u_new', role: authRole, name, shopName: shop, email, phone, address: addr, password: pwd };
   AppData.users.push(newUser);
   State.currentUser = newUser;
+  localStorage.setItem('vegmarket_user', JSON.stringify(newUser));
   toast(`Account created! Welcome, ${name}! 🎉`);
   navigate(authRole === 'seller' ? 'admin' : 'dashboard');
 }
 
 function logout() {
   State.currentUser = null;
+  localStorage.removeItem('vegmarket_user');
   State.cart = [];
   State.currentPage = 'auth';
   $('app-root').innerHTML = renderAuth();
@@ -1101,5 +1119,11 @@ function openInvoice(orderId) {
 
 /* ── Init ── */
 document.addEventListener('DOMContentLoaded', () => {
-  renderPage('auth');
+  const savedUser = localStorage.getItem('vegmarket_user');
+  if (savedUser) {
+    State.currentUser = JSON.parse(savedUser);
+    navigate(State.currentUser.role === 'seller' ? 'admin' : 'dashboard');
+  } else {
+    renderPage('auth');
+  }
 });
