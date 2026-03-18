@@ -52,6 +52,11 @@ function navigate(page, data = {}) {
 
 /* ── Router ── */
 function renderPage(page) {
+  if (!State.currentUser && page !== 'auth') {
+    navigate('auth');
+    return;
+  }
+
   const root = $('app-root');
   updateSidebarActive(page);
   updateCartBadge();
