@@ -1137,17 +1137,6 @@ function openInvoice(orderId) {
 
 /* ── Init ── */
 document.addEventListener('DOMContentLoaded', () => {
-  let savedUser = null;
-  try {
-    savedUser = localStorage.getItem('vegmarket_user');
-  } catch (e) {
-    console.warn("localStorage not available", e);
-  }
-  
-  if (savedUser) {
-    State.currentUser = JSON.parse(savedUser);
-    navigate(State.currentUser.role === 'seller' ? 'admin' : 'dashboard');
-  } else {
-    renderPage('auth');
-  }
+  // Always start at the login page as requested
+  renderPage('auth');
 });
