@@ -42,13 +42,31 @@ function stars(rating) {
 
 function formatCurrency(n) { return '₹' + n.toLocaleString('en-IN'); }
 
-function navigate(page, data = {}) {
+function navigate(page, data = {}, pushToHistory = true) {
   if (data.market) State.currentMarket = data.market;
   if (data.shop) State.currentShop = data.shop;
   State.currentPage = page;
   toggleSidebar(false); // Close sidebar on mobile after navigation
+
+  if (pushToHistory) {
+    history.pushState({ page, market: State.currentMarket, shop: State.currentShop }, '', `#${page}`);
+  }
+
   renderPage(page);
 }
+
+window.addEventListener('popstate', (e) => {
+  if (e.state && e.state.page) {
+    navigate(e.state.page, { market: e.state.market, shop: e.state.shop }, false);
+  } else {
+    const hash = location.hash.replace('#', '');
+    if (hash && hash !== 'auth') {
+      navigate(hash, {}, false);
+    } else {
+      navigate('auth', {}, false);
+    }
+  }
+});
 
 /* ── Router ── */
 function renderPage(page) {
@@ -483,7 +501,7 @@ function renderMarkets() {
     <div style="font-size:2rem;margin-bottom:8px">🌱</div>
     <div style="font-weight:700;font-size:1rem;margin-bottom:4px">Need a custom market?</div>
     <div style="font-size:.85rem;color:var(--gray-500);margin-bottom:14px">Contact us to onboard your local wholesale market.</div>
-    <button class="btn btn-outline btn-sm">Contact Support</button>
+    <button class="btn btn-outline btn-sm" onclick="toast('Support channel will open shortly!', 'info')">Contact Support</button>
   </div>`;
 }
 
@@ -1137,6 +1155,11 @@ function openInvoice(orderId) {
 
 /* ── Init ── */
 document.addEventListener('DOMContentLoaded', () => {
-  // Always start at the login page as requested
-  renderPage('auth');
+  // Always start at the login page or restored hash
+  const hash = location.hash.replace('#', '');
+  if (hash && hash !== 'auth') {
+    navigate(hash, {}, false);
+  } else {
+    renderPage('auth');
+  }
 });
