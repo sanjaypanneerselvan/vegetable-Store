@@ -46,6 +46,7 @@ function navigate(page, data = {}) {
   if (data.market) State.currentMarket = data.market;
   if (data.shop) State.currentShop = data.shop;
   State.currentPage = page;
+  toggleSidebar(false); // Close sidebar on mobile after navigation
   renderPage(page);
 }
 
@@ -113,8 +114,9 @@ function renderAppShell(content) {
   const pageTitle = { dashboard:'Dashboard', markets:'Markets', shops:'Vendors', products:'Products', cart:'Cart', orders:'Orders', tracking:'Track Orders', admin:'Admin Panel' };
 
   return `
-  <div class="app-layout">
-    <aside class="sidebar">
+  <div class="app-layout" id="app-layout">
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar(false)"></div>
+    <aside class="sidebar" id="sidebar">
       <div class="sidebar-logo">
         <span class="sidebar-logo-icon">🥬</span>
         <span class="sidebar-logo-text">VegMarket</span>
@@ -138,15 +140,16 @@ function renderAppShell(content) {
     </aside>
     <div class="main-content">
       <header class="topbar">
+        <div class="mobile-menu-toggle" onclick="toggleSidebar(true)">☰</div>
         <div class="topbar-title">${pageTitle[State.currentPage] || 'VegMarket'}</div>
         <div class="topbar-search">
           <span>🔍</span>
           <input type="text" id="global-search" placeholder="Search vegetables, shops..." value="${State.searchQuery}" oninput="handleSearch(this.value)">
         </div>
         ${!isSeller ? `<div class="cart-btn" onclick="navigate('cart')">🛒<span class="cart-count" id="cart-badge" style="${cartCount === 0 ? 'display:none' : ''}">${cartCount}</span></div>` : ''}
-        <div style="display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--gray-500)">
+        <div style="display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--gray-500)" class="live-prices-btn">
           <span style="width:8px;height:8px;background:var(--green-500);border-radius:50%;display:inline-block;animation:pulse 2s infinite"></span>
-          Live Prices
+          <span class="hide-mobile">Live Prices</span>
         </div>
       </header>
       <div class="content-area fade-in">
@@ -155,6 +158,18 @@ function renderAppShell(content) {
     </div>
   </div>
   <div id="invoice-modal-container"></div>`;
+}
+
+function toggleSidebar(open) {
+  const sb = $('sidebar');
+  const ov = $('sidebar-overlay');
+  if (open) {
+    sb.classList.add('open');
+    ov.classList.add('active');
+  } else {
+    sb.classList.remove('open');
+    ov.classList.remove('active');
+  }
 }
 
 function bindAppShell() {}
@@ -361,8 +376,8 @@ function renderDashboard() {
   <div class="markets-grid">
     ${AppData.markets.slice(0,3).map(m => renderMarketCard(m)).join('')}
   </div>` : `
-  <div class="section-header"><div class="section-title">📦 Recent Orders</div></div>
-  <div style="background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--gray-100);overflow:hidden">
+  </div>
+  <div class="admin-product-table-wrapper">
     <table class="admin-product-table">
       <thead><tr><th>Order ID</th><th>Date</th><th>Items</th><th>Total</th><th>Status</th><th>Action</th></tr></thead>
       <tbody>${State.orders.slice(0,5).map(o => `
@@ -372,8 +387,9 @@ function renderDashboard() {
           <td>${o.items.length} items</td>
           <td><strong>${formatCurrency(o.total)}</strong></td>
           <td><span class="order-status-badge badge-${o.status}">${o.status.replace(/_/g,' ')}</span></td>
+          <td>
             <button class="btn btn-outline btn-sm" onclick="navigate('tracking')">Track</button>
-            <button class="btn btn-ghost btn-sm" style="margin-left:4px" onclick="openInvoice('${o.id}')" title="View Invoice">Invoice</button>
+            <button class="btn btn-ghost btn-sm" onclick="openInvoice('${o.id}')" title="View Invoice">Invoice</button>
           </td>
         </tr>`).join('')}
       </tbody>
@@ -733,7 +749,7 @@ function renderOrders() {
   if (myOrders.length === 0) return `<div class="empty-state"><div class="empty-state-icon">📋</div><h3>No orders yet</h3><p>Place your first order from the markets</p><button class="btn btn-primary" onclick="navigate('markets')">Shop Now</button></div>`;
   return `
   <div class="section-header"><div class="section-title">📋 All Orders</div></div>
-  <div style="background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--gray-100);overflow:hidden;box-shadow:var(--shadow-sm)">
+  <div class="admin-product-table-wrapper">
     <table class="admin-product-table">
       <thead><tr><th>Order ID</th><th>Date</th><th>Items</th><th>Total</th><th>Status</th><th>Action</th></tr></thead>
       <tbody>${myOrders.map(o => `
@@ -745,7 +761,7 @@ function renderOrders() {
           <td><span class="order-status-badge badge-${o.status}">${o.status.replace(/_/g,' ')}</span></td>
           <td>
             <button class="btn btn-outline btn-sm" onclick="navigate('tracking')">Track</button>
-            <button class="btn btn-ghost btn-sm" style="margin-left:4px" onclick="openInvoice('${o.id}')" title="View Invoice">Invoice</button>
+            <button class="btn btn-ghost btn-sm" onclick="openInvoice('${o.id}')" title="View Invoice">Invoice</button>
           </td>
         </tr>`).join('')}
       </tbody>
@@ -848,15 +864,17 @@ function renderAdmin() {
     <div class="stat-card blue"><div class="stat-icon blue">💰</div><div class="stat-value">${formatCurrency(State.orders.reduce((a,o)=>a+o.total,0))}</div><div class="stat-label">Total Revenue</div></div>
   </div>
 
-  <div style="background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--gray-100);overflow:hidden;box-shadow:var(--shadow-sm)">
+  <div class="admin-product-table-wrapper" style="background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--gray-100);box-shadow:var(--shadow-sm)">
     <div style="padding:16px 20px;border-bottom:1px solid var(--gray-100);display:flex;align-items:center;justify-content:space-between">
       <div><div class="section-title">📦 Product Management</div><div class="section-sub">${shopProducts.length} products</div></div>
       <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Add Product</button>
     </div>
-    <table class="admin-product-table">
-      <thead><tr><th>Product</th><th>Category</th><th>Price/kg</th><th>Stock</th><th>Today's Deal</th><th>Actions</th></tr></thead>
-      <tbody id="admin-tbody">${tableRows}</tbody>
-    </table>
+    <div style="overflow-x:auto">
+      <table class="admin-product-table">
+        <thead><tr><th>Product</th><th>Category</th><th>Price/kg</th><th>Stock</th><th>Today's Deal</th><th>Actions</th></tr></thead>
+        <tbody id="admin-tbody">${tableRows}</tbody>
+      </table>
+    </div>
   </div>
 
   <!-- Edit Modal -->
