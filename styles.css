@@ -1,45 +1,31 @@
-.sidebar {
-  display: block; /* Default for larger screens */
+.container {
+    padding: 10px;
 }
 
-@media (max-width: 768px) {
-  .sidebar {
-    display: none; /* Hide sidebar on tablets */
-  }
+.button {
+    padding: 10px 15px;
+    font-size: 18px;
+    border-radius: 5px;
+    display: inline-block;
 }
 
-@media (max-width: 600px) {
-  .sidebar {
-    display: none; /* Hide sidebar on mobile landscape */
-  }
+@media (max-width: 767px) {
+    .container {
+        padding: 5px;
+    }
+    .button {
+        width: 100%;
+        padding: 15px;
+        font-size: 16px;
+    }
+}
 
-  .grid-layout {
-    grid-template-columns: 1fr; /* Single column layout for mobile */
-  }
-
-  body {
-    font-size: 14px; /* Adjust font size */
-    padding: 10px; /* Adjust padding */
-  }
-
-  .cart-layout {
-    flex-direction: column; /* Stack cart items on mobile */
-  }
+body {
+    font-size: 16px;
 }
 
 @media (max-width: 480px) {
-  body {
-    font-size: 12px; /* Further adjust font size for smaller devices */
-  }
-
-  .major-component {
-    padding: 5px; /* Reduce padding for major components */
-  }
-}
-
-/* Print styles section begins here */
-@media print {
-  .sidebar {
-    display: none; /* Ensure sidebar does not show in print */
-  }
+    body {
+        font-size: 14px;
+    }
 }
