@@ -163,6 +163,7 @@ function renderAppShell(content) {
 function toggleSidebar(open) {
   const sb = $('sidebar');
   const ov = $('sidebar-overlay');
+  if (!sb || !ov) return;
   if (open) {
     sb.classList.add('open');
     ov.classList.add('active');
@@ -286,7 +287,11 @@ function doLogin() {
   if (!user) { toast('Invalid credentials. Use the demo accounts shown below.', 'error'); return; }
   if (authRole !== user.role) { toast(`This account is a ${user.role}. Please select the correct role.`, 'error'); return; }
   State.currentUser = user;
-  localStorage.setItem('vegmarket_user', JSON.stringify(user));
+  try {
+    localStorage.setItem('vegmarket_user', JSON.stringify(user));
+  } catch (e) {
+    console.warn("localStorage not available", e);
+  }
   toast(`Welcome back, ${user.name}! 👋`);
   navigate(user.role === 'seller' ? 'admin' : 'dashboard');
 }
@@ -302,14 +307,22 @@ function doRegister() {
   const newUser = { id: 'u_new', role: authRole, name, shopName: shop, email, phone, address: addr, password: pwd };
   AppData.users.push(newUser);
   State.currentUser = newUser;
-  localStorage.setItem('vegmarket_user', JSON.stringify(newUser));
+  try {
+    localStorage.setItem('vegmarket_user', JSON.stringify(newUser));
+  } catch (e) {
+    console.warn("localStorage not available", e);
+  }
   toast(`Account created! Welcome, ${name}! 🎉`);
   navigate(authRole === 'seller' ? 'admin' : 'dashboard');
 }
 
 function logout() {
   State.currentUser = null;
-  localStorage.removeItem('vegmarket_user');
+  try {
+    localStorage.removeItem('vegmarket_user');
+  } catch (e) {
+    console.warn("localStorage not available", e);
+  }
   State.cart = [];
   State.currentPage = 'auth';
   $('app-root').innerHTML = renderAuth();
@@ -1119,7 +1132,13 @@ function openInvoice(orderId) {
 
 /* ── Init ── */
 document.addEventListener('DOMContentLoaded', () => {
-  const savedUser = localStorage.getItem('vegmarket_user');
+  let savedUser = null;
+  try {
+    savedUser = localStorage.getItem('vegmarket_user');
+  } catch (e) {
+    console.warn("localStorage not available", e);
+  }
+  
   if (savedUser) {
     State.currentUser = JSON.parse(savedUser);
     navigate(State.currentUser.role === 'seller' ? 'admin' : 'dashboard');
